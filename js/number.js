@@ -24,6 +24,12 @@ const _numbers = {
   9: 0x7b,
 };
 
+/**
+ * Renders a number in the given container.
+ *
+ * @param {Element} container - The container element where the number will be rendered.
+ * @param {number} value - The number to be rendered.
+ */
 const renderNumber = (container, value) => {
   container.innerHTML = ""
 
@@ -53,6 +59,12 @@ const renderNumber = (container, value) => {
   }
 };
 
+/**
+ * Creates a number container with the given value.
+ *
+ * @param {number} value - The initial value of the number container. Default is 0.
+ * @return {Element} - The created number container element.
+ */
 const createNumberContainer = (value = 0) => {
   const container = document.createElement("div");
   container.className =

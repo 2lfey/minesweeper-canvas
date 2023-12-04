@@ -1,19 +1,22 @@
 let count = 0;
 
-const DIFF8X8 = {
-  x: 8,
-  y: 8,
-}
+const DIFF9X9 = {
+  x: 9,
+  y: 9,
+  p: 0.12345679012,
+};
 
 const DIFF16X16 = {
   x: 16,
-  y: 16
-}
+  y: 16,
+  p: 0.15625,
+};
 
-const DIFF40X16 = {
-  x: 40,
-  y: 16
-}
+const DIFF30X16 = {
+  x: 30,
+  y: 16,
+  p: 0.20625,
+};
 
 /**
  * Creates a new item object.
@@ -45,8 +48,10 @@ const calcAdjacentMines = (board) => {
       return;
     }
 
-    const row = Math.floor(index / board.rows);
-    const column = index % board.rows;
+    // What the fuck?
+
+    const row = Math.floor(index / columns);
+    const column = index % columns;
 
     if (row > 0) {
       item.countAdjacentMines += items[index - rows].isMine ? 1 : 0; // top
@@ -91,12 +96,13 @@ const calcAdjacentMines = (board) => {
 const revealAll = (board) => {
   board._isRevialing = true;
 
-  board.items.forEach((item, index) => {
-    const row = Math.floor(index / board.rows);
-    const column = index % board.rows;
+  for (const index in board.items) {
+    console.log(index);
+    const row = Math.floor(index / board.columns);
+    const column = index % board.columns;
 
     reveal(column, row);
-  });
+  }
 
   board._isRevialing = false;
 };
@@ -112,6 +118,16 @@ const revealCloud = (board, column, row) => {
   // Check top cell
   if (row > 0) {
     reveal(column, row - 1);
+
+    // Check top-left cell
+    if (column > 0) {
+      reveal(column - 1, row - 1);
+    }
+
+    // Check top-right cell
+    if (column < board.columns - 1) {
+      reveal(column + 1, row - 1);
+    }
   }
 
   // Check left cell
@@ -122,6 +138,16 @@ const revealCloud = (board, column, row) => {
   // Check bottom cell
   if (row < board.rows - 1) {
     reveal(column, row + 1);
+
+    // Check bottom-left cell
+    if (column > 0) {
+      reveal(column - 1, row + 1);
+    }
+
+    // Check bottom-right cell
+    if (column < board.columns - 1) {
+      reveal(column + 1, row + 1);
+    }
   }
 
   // Check right cell
@@ -212,20 +238,19 @@ const clearBoard = (board) => {
 /**
  * Creates a game board with the specified number of columns and rows.
  *
- * @param {number} columns - The number of columns in the game board.
- * @param {number} rows - The number of rows in the game board.
+ * @param {object} diff - The difficulty level of the game.
  * @return {object} An object containing the game board and two functions,
  * reveal and flag, for interacting with the game board.
  */
-const createBoard = (columns, rows) => {
-  console.log(`[createBoard] Creating board with ${columns} x ${rows} cells`);
+const createBoard = (diff) => {
+  console.log(`[createBoard] Creating board with ${diff.x} x ${diff.y} cells`);
 
   const board = {
-    columns,
-    rows,
+    columns: diff.x,
+    rows: diff.y,
     flagCount: 0,
-    mineCount: Math.round((columns * rows) / 5), // 20% of cells are mines
-    items: Array.from({ length: columns * rows }, () => createItem()),
+    mineCount: Math.round(diff.x * diff.y * diff.p),
+    items: Array.from({ length: diff.x * diff.y }, () => createItem()),
     _isRevialing: false,
     _isFirstReveal: true,
     events: {

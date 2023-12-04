@@ -1,7 +1,8 @@
-const settings = {
+const defaultSettings = {
   grid: {
-    horizontalCount: 16,
-    verticalCount: 16,
+    // horizontalCount: 16,
+    // verticalCount: 16,
+    diff: null,
     size: 30,
     color: "#6b7280",
   },
@@ -48,16 +49,10 @@ const settings = {
   },
 };
 
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
+// const isHorizontalOrientation = window.innerHeight < window.innerWidth;
 
-const isHorizontalOrientation = window.innerHeight < window.innerWidth;
-
-canvas.height = settings.grid.verticalCount * settings.grid.size;
-canvas.width = settings.grid.horizontalCount * settings.grid.size;
-
-const countHorizontalLines = Math.round(canvas.width / settings.grid.size);
-const countVerticalLines = Math.round(canvas.height / settings.grid.size);
+// const countHorizontalLines = Math.round(canvas.width / settings.grid.size);
+// const countVerticalLines = Math.round(canvas.height / settings.grid.size);
 
 // const drawHorizontalLines = (count) => {
 //   for (let i = 0; i < count; ++i) {
@@ -81,117 +76,160 @@ const countVerticalLines = Math.round(canvas.height / settings.grid.size);
 //   }
 // };
 
-const drawHiddenItem = (x, y) => {
-  ctx.fillStyle = settings.item.hidden.borderBottomRight;
-  ctx.fillRect(x, y, settings.grid.size, settings.grid.size);
+/**
+ * Initializes the canvas with the given settings.
+ *
+ * @param {HTMLCanvasElement} canvas - The canvas element to be initialized.
+ * @param {object} [settings=defaultSettings] - The settings object for the canvas.
+ * @return {object} An object containing functions for drawing on the canvas.
+ */
+const setupCanvas = (canvas, settings = defaultSettings) => {
+  canvas.height = settings.grid.diff.y * settings.grid.size;
+  canvas.width = settings.grid.diff.x * settings.grid.size;
 
-  ctx.beginPath();
+  const ctx = canvas.getContext("2d");
 
-  ctx.moveTo(x, y + settings.grid.size);
-  ctx.lineTo(x, y);
-  ctx.lineTo(x + settings.grid.size, y);
-
-  ctx.fillStyle = settings.item.hidden.borderTopLeft;
-  ctx.fill();
-
-  ctx.fillStyle = settings.item.hidden.color;
-  ctx.fillRect(x + 4, y + 4, settings.grid.size - 8, settings.grid.size - 8);
-};
-
-const drawRevealedItem = (x, y, color, count) => {
-  ctx.fillStyle = settings.item.hidden.color;
-  ctx.fillRect(
-    column * settings.grid.size,
-    row * settings.grid.size,
-    settings.grid.size,
-    settings.grid.size
-  );
-
-  ctx.fillStyle = settings.item.hidden.color;
-  ctx.fillRect(
-    column * settings.grid.size + 1,
-    row * settings.grid.size + 1,
-    settings.grid.size - 2,
-    settings.grid.size - 2
-  );
-
-  if (count > 0) {
-    ctx.font = "700 18px sans-serif";
-    ctx.fillStyle = color;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(
-      count,
-      column * settings.grid.size + settings.grid.size / 2,
-      row * settings.grid.size + settings.grid.size / 2
-    );
-  }
-};
-
-const drawFlag = (x, y) => {
-  y += 4;
-  x += 4;
-
-  ctx.beginPath();
-
-  ctx.moveTo(x + settings.grid.size / 2, y);
-  ctx.lineTo(x + settings.grid.size / 2, y + settings.grid.size / 2);
-  ctx.lineTo(x + 3, y + settings.grid.size / 4);
-
-  ctx.fillStyle = settings.item.flag.color;
-  ctx.fill();
-
-  ctx.beginPath();
-
-  ctx.moveTo(x + settings.grid.size / 2 - 2, y);
-  ctx.lineTo(x + settings.grid.size / 2 - 2, y + settings.grid.size / 2 + 4);
-
-  x -= 3;
-
-  ctx.moveTo(x + settings.grid.size / 4 + 2, y + settings.grid.size - 12);
-  ctx.lineTo(x + settings.grid.size / 2 + 6, y + settings.grid.size - 12);
-
-  ctx.lineWidth = 4;
-  ctx.strokeStyle = settings.item.flag.arrow;
-
-  ctx.stroke();
-};
-
-const drawMine = (x, y) => {
-  const circle = 2 * Math.PI;
-  const angleIncrement = circle / 8;
-  const centerX = x + settings.grid.size / 2;
-  const centerY = y + settings.grid.size / 2;
-
-  ctx.lineWidth = 4;
-  ctx.strokeStyle = settings.item.mine.color;
-
-  for (let i = 1; i <= 8; ++i) {
-    const angle = i * angleIncrement;
+  /**
+   * Draws a hidden item on the canvas at the specified coordinates.
+   *
+   * @param {number} x - The x-coordinate of the item's top-left corner.
+   * @param {number} y - The y-coordinate of the item's top-left corner.
+   */
+  const drawHiddenItem = (x, y) => {
+    ctx.fillStyle = settings.item.hidden.borderBottomRight;
+    ctx.fillRect(x, y, settings.grid.size, settings.grid.size);
 
     ctx.beginPath();
-    ctx.moveTo(centerX, centerY);
-    ctx.arc(centerX, centerY, 5, angle, angle + angleIncrement);
 
-    const cosa = Math.cos(angle);
-    const sina = Math.sin(angle);
+    ctx.moveTo(x, y + settings.grid.size);
+    ctx.lineTo(x, y);
+    ctx.lineTo(x + settings.grid.size, y);
 
-    ctx.lineTo(
-      centerX + 10 * cosa,
-      centerY + 10 * sina
-    );
+    ctx.fillStyle = settings.item.hidden.borderTopLeft;
+    ctx.fill();
+
+    ctx.fillStyle = settings.item.hidden.color;
+    ctx.fillRect(x + 4, y + 4, settings.grid.size - 8, settings.grid.size - 8);
+  };
+
+  /**
+   * Draws a revealed item on the canvas.
+   *
+   * @param {number} x - The x-coordinate of the item.
+   * @param {number} y - The y-coordinate of the item.
+   * @param {string} color - The color of the item.
+   * @param {number} count - The count of the item.
+   */
+  const drawRevealedItem = (x, y, color, count) => {
+    ctx.fillStyle = settings.item.hidden.color;
+    ctx.fillRect(x, y, settings.grid.size, settings.grid.size);
+
+    ctx.fillStyle = settings.item.hidden.color;
+    ctx.fillRect(x + 1, y + 1, settings.grid.size - 2, settings.grid.size - 2);
+
+    if (count > 0) {
+      ctx.font = "700 18px sans-serif";
+      ctx.fillStyle = color;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(
+        count,
+        x + settings.grid.size / 2,
+        y + settings.grid.size / 2
+      );
+    }
+  };
+
+  /**
+   * Draws a flag on the canvas at the specified coordinates.
+   *
+   * @param {number} x - The x-coordinate of the flag's position.
+   * @param {number} y - The y-coordinate of the flag's position.
+   */
+  const drawFlag = (x, y) => {
+    y += 4;
+    x += 4;
+
+    ctx.beginPath();
+
+    ctx.moveTo(x + settings.grid.size / 2, y);
+    ctx.lineTo(x + settings.grid.size / 2, y + settings.grid.size / 2);
+    ctx.lineTo(x + 3, y + settings.grid.size / 4);
+
+    ctx.fillStyle = settings.item.flag.color;
+    ctx.fill();
+
+    ctx.beginPath();
+
+    ctx.moveTo(x + settings.grid.size / 2 - 2, y);
+    ctx.lineTo(x + settings.grid.size / 2 - 2, y + settings.grid.size / 2 + 4);
+
+    x -= 3;
+
+    ctx.moveTo(x + settings.grid.size / 4 + 2, y + settings.grid.size - 12);
+    ctx.lineTo(x + settings.grid.size / 2 + 6, y + settings.grid.size - 12);
+
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = settings.item.flag.arrow;
 
     ctx.stroke();
-  }
-};
+  };
 
-const setupCanvas = () => {
-  // Remove previous scatch
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  /**
+   * Draws a mine at the specified coordinates.
+   *
+   * @param {number} x - The x-coordinate of the mine.
+   * @param {number} y - The y-coordinate of the mine.
+   */
+  const drawMine = (x, y) => {
+    const circle = 2 * Math.PI;
+    const angleIncrement = circle / 8;
+    const centerX = x + settings.grid.size / 2;
+    const centerY = y + settings.grid.size / 2;
 
-  for (let i = 0; i < countHorizontalLines; ++i) {
-    for (let j = 0; j < countVerticalLines; ++j) {
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = settings.item.mine.color;
+
+    for (let i = 1; i <= 8; ++i) {
+      const angle = i * angleIncrement;
+
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.arc(centerX, centerY, 5, angle, angle + angleIncrement);
+
+      const cosa = Math.cos(angle);
+      const sina = Math.sin(angle);
+
+      ctx.lineTo(centerX + 10 * cosa, centerY + 10 * sina);
+
+      ctx.stroke();
+    }
+  };
+
+  /**
+   * Clears the canvas by removing all drawings.
+   *
+   * @param {number} width - The width of the canvas.
+   * @param {number} height - The height of the canvas.
+   * @return {undefined} This function does not return a value.
+   */
+  const clearCanvas = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  };
+
+  clearCanvas();
+
+  for (let i = 0; i < settings.grid.diff.x; ++i) {
+    for (let j = 0; j < settings.grid.diff.y; ++j) {
       drawHiddenItem(i * settings.grid.size, j * settings.grid.size);
     }
   }
+
+  return {
+    drawHiddenItem,
+    drawRevealedItem,
+    drawFlag,
+    drawMine,
+    clearCanvas,
+  };
 };
