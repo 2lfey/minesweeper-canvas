@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script> -->
+  <!-- <script src="/static/test.js" defer></script> -->
+
+  <script src="./js/number.js" defer></script>
+  <script src="./js/timer.js" defer></script>
+  <script src="./js/game.js" defer></script>
+  <script src="./js/canvas.js" defer></script>
+  <script src="./js/bind.js" defer></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="h-screen flex flex-col items-center bg-gray-800">
+
+  <div class="flex-1 min-h-screen flex flex-col justify-center">
+    <div class="text-white flex justify-center gap-4">
+        <div class="flex items-center">
+          <input checked type="radio" name="diffcult" id="diff8x8">
+          <label for="diff8x8">8x8</label>
+        </div>
+      <div class="flex items-center">
+        <input type="radio" name="diffcult" id="diff16x16">
+        <label for="diff16x16">16x16</label>
+      </div>
+      <div class="flex items-center">
+        <input type="radio" name="diffcult" id="diff40x16">
+        <label for="diff40x16">40x16</label>
+      </div>
+    </div>
+    <div class="space-y-4 bg-neutral-400 p-4 border-8 border-neutral-300 border-r-neutral-500 border-b-neutral-500">
+      <header class="p-1.5 flex justify-between text-white border-8 border-neutral-300 border-l-neutral-500 border-t-neutral-500">
+        <div id="mineCount"></div>
+        
+        <button class="border-2 border-neutral-500 border-l-neutral-300 border-t-neutral-300 active:border-neutral-500 active:border-r-neutral-300 active:border-b-neutral-300" id="restartBtn">Restart</button>
+
+        <div id="timer"></div>
+      </header>
+      <main class="border-8 border-neutral-300 border-l-neutral-500 border-t-neutral-500">
+        <canvas id="canvas" class="w-full cursor-pointer"></canvas>
+      </main>
+    </div>
+  </div>
+
+</body>
+
+</html>
