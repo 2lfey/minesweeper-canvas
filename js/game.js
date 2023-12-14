@@ -54,14 +54,14 @@ const calcAdjacentMines = (board) => {
     const column = index % columns;
 
     if (row > 0) {
-      item.countAdjacentMines += items[index - rows].isMine ? 1 : 0; // top
+      item.countAdjacentMines += items[index - columns].isMine ? 1 : 0; // top
 
       if (column > 0) {
-        item.countAdjacentMines += items[index - rows - 1].isMine ? 1 : 0; // top-left
+        item.countAdjacentMines += items[index - columns - 1].isMine ? 1 : 0; // top-left
       }
 
       if (column < columns - 1) {
-        item.countAdjacentMines += items[index - rows + 1].isMine ? 1 : 0; // top-right
+        item.countAdjacentMines += items[index - columns + 1].isMine ? 1 : 0; // top-right
       }
     }
 
@@ -70,14 +70,14 @@ const calcAdjacentMines = (board) => {
     }
 
     if (row < rows - 1) {
-      item.countAdjacentMines += items[index + rows].isMine ? 1 : 0; // bottom
+      item.countAdjacentMines += items[index + columns].isMine ? 1 : 0; // bottom
 
       if (column > 0) {
-        item.countAdjacentMines += items[index + rows - 1].isMine ? 1 : 0; // bottom-left
+        item.countAdjacentMines += items[index + columns - 1].isMine ? 1 : 0; // bottom-left
       }
 
       if (column < columns - 1) {
-        item.countAdjacentMines += items[index + rows + 1].isMine ? 1 : 0; // bottom-right
+        item.countAdjacentMines += items[index + columns + 1].isMine ? 1 : 0; // bottom-right
       }
     }
 
@@ -97,7 +97,6 @@ const revealAll = (board) => {
   board._isRevialing = true;
 
   for (const index in board.items) {
-    console.log(index);
     const row = Math.floor(index / board.columns);
     const column = index % board.columns;
 
@@ -248,7 +247,9 @@ const createBoard = (diff) => {
   const board = {
     columns: diff.x,
     rows: diff.y,
+    isStoped: false,
     flagCount: 0,
+    revealCount: 0,
     mineCount: Math.round(diff.x * diff.y * diff.p),
     items: Array.from({ length: diff.x * diff.y }, () => createItem()),
     _isRevialing: false,
@@ -272,7 +273,12 @@ const createBoard = (diff) => {
    * @param {number} row - The row index of the cell to reveal.
    */
   const reveal = (column, row) => {
-    const index = board.rows * row + column;
+    if (board.isStoped) {
+      return;
+    }
+
+    const index = board.columns * row + column;
+
     const item = board.items[index];
 
     if (item.isFlagged || item.isRevealed) {
@@ -285,6 +291,7 @@ const createBoard = (diff) => {
     }
 
     item.isRevealed = true;
+    ++board.revealCount;
 
     if (item.isMine) {
       if (!board._isRevialing) {
@@ -294,6 +301,14 @@ const createBoard = (diff) => {
 
       triggerEvent(board, "onMine", column, row, item);
       return;
+    }
+
+    if (
+      !board._isRevialing && board.items.length - board.revealCount ===
+      board.mineCount
+    ) {
+      triggerEvent(board, "onVictory");
+      board.isStoped = true;
     }
 
     if (
@@ -314,7 +329,11 @@ const createBoard = (diff) => {
    * @param {number} row - the row index of the cell
    */
   const flag = (column, row) => {
-    const index = board.rows * row + column;
+    if (board.isStoped) {
+      return;
+    }
+    
+    const index = board.columns * row + column;
     const item = board.items[index];
 
     if (board.mineCount <= board.flagCount) {
